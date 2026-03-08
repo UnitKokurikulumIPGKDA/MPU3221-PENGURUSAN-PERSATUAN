@@ -1,15 +1,83 @@
 <!DOCTYPE html>
-<html lang="ms">
+<html lang="id">
 <head>
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPU3221: Analisis Markah (GitHub Version)</title>
+  <title>Analisis Markah MPU3221 - Glassmorphism Edition</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background: #0f172a;
+      overflow-x: hidden;
+      min-height: 100vh;
+      color: white;
+    }
+
+    /* Latar Belakang Abstrak Dinamis */
+    .abstract-bg {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      z-index: -1;
+      background: radial-gradient(circle at 10% 20%, #1e3a8a 0%, transparent 40%),
+                  radial-gradient(circle at 90% 80%, #581c87 0%, transparent 40%),
+                  radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%);
+    }
+
+    .blob {
+      position: absolute;
+      width: 600px; height: 600px;
+      background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%);
+      filter: blur(100px);
+      border-radius: 50%;
+      opacity: 0.1;
+      animation: move 25s infinite alternate ease-in-out;
+    }
+
+    @keyframes move {
+      0% { transform: translate(-15%, -15%) rotate(0deg) scale(1); }
+      100% { transform: translate(25%, 25%) rotate(360deg) scale(1.2); }
+    }
+
+    /* Efek Kaca (Glassmorphism) */
+    .glass {
+      background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(16px) saturate(180%);
+      -webkit-backdrop-filter: blur(16px) saturate(180%);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 28px;
+    }
+
+    .glass-card {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .glass-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+      transform: translateY(-6px) scale(1.01);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    }
+
+    .glass-nav {
+      background: rgba(15, 23, 42, 0.7);
+      backdrop-filter: blur(24px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .text-glow {
+      text-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+    }
+
+    /* Loading Overlay Custom */
     .loading-overlay {
-      background: rgba(255,255,255,0.95);
+      background: #0f172a;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -18,160 +86,111 @@
       top: 0; left: 0; width: 100%; height: 100%;
       z-index: 9999;
     }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    .animate-pulse-slow {
-      animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
   </style>
 </head>
-<body class="bg-slate-50 text-slate-900 font-sans">
+<body>
 
-  <!-- Skrin Pemuatan -->
-  <div id="loading" class="loading-overlay">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
-    <div class="text-lg font-bold text-slate-700 animate-pulse" id="loading-text">Menyambung ke Pangkalan Data...</div>
-    <p class="text-xs text-slate-400 mt-2 italic">Sila tunggu sebentar sementara kami mengesahkan API</p>
+  <div class="abstract-bg">
+    <div class="blob" style="top: -5%; left: -5%;"></div>
+    <div class="blob" style="bottom: -5%; right: -5%; animation-delay: -7s;"></div>
   </div>
 
-  <!-- Navigasi -->
-  <nav class="bg-blue-700 text-white sticky top-0 z-40 shadow-md">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="bg-white p-2 rounded-xl shadow-inner">
-          <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+  <!-- Loading Screen -->
+  <div id="loading" class="loading-overlay">
+    <div class="relative w-24 h-24 mb-6">
+      <div class="absolute inset-0 border-4 border-blue-500/10 rounded-full"></div>
+      <div class="absolute inset-0 border-4 border-t-blue-500 rounded-full animate-spin"></div>
+    </div>
+    <div class="text-xs font-black tracking-[0.5em] text-blue-400 uppercase animate-pulse">Sinkronisasi Data...</div>
+  </div>
+
+  <!-- Navbar -->
+  <nav class="glass-nav sticky top-0 z-40 px-8 py-5">
+    <div class="container mx-auto flex justify-between items-center">
+      <div class="flex items-center gap-5">
+        <div class="p-3 glass rounded-2xl shadow-xl">
+          <svg class="w-7 h-7 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
           </svg>
         </div>
         <div>
-          <h1 class="text-lg font-black leading-none uppercase tracking-tight">MPU3221</h1>
-          <p class="text-[10px] font-medium text-blue-100 mt-1 uppercase tracking-widest">Sistem Analisis Markah</p>
+          <h1 class="text-2xl font-extrabold tracking-tighter text-glow uppercase">MPU3221 Analytics</h1>
+          <p class="text-[9px] font-black text-blue-500 uppercase tracking-[0.4em] opacity-70">Sistem Pengurusan Persatuan</p>
         </div>
       </div>
-      <div class="text-right flex flex-col items-end">
-        <div id="stat-count" class="bg-blue-800 px-3 py-1 rounded-full text-[10px] font-bold">0 Pelajar</div>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span id="status-dot" class="w-2 h-2 rounded-full bg-blue-400"></span>
-          <div id="connection-status" class="text-[8px] text-blue-300 font-mono italic">Status: Menunggu...</div>
+      
+      <div class="flex items-center gap-6">
+        <div class="hidden lg:flex flex-col items-end">
+          <div id="connection-status" class="flex items-center gap-2">
+            <span class="w-2 h-2 bg-green-500 rounded-full shadow-[0_0_8px_#22c55e]"></span>
+            <span class="text-[10px] font-black text-blue-200 uppercase tracking-widest">Sistem Terhubung</span>
+          </div>
+          <span id="stat-count" class="text-[10px] font-bold opacity-40 mt-1">0 Rekod Ditemukan</span>
         </div>
+        <button onclick="loadData()" class="p-3 glass rounded-2xl hover:bg-white/10 transition-all hover:scale-110 active:scale-95 group">
+          <svg class="w-5 h-5 group-active:rotate-180 transition-transform duration-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </button>
       </div>
     </div>
   </nav>
 
-  <main class="container mx-auto px-4 py-8">
+  <main class="container mx-auto px-8 py-12">
     
-    <!-- Amaran CORS untuk GitHub Hosting -->
-    <div id="api-warning" class="hidden mb-8 bg-white border border-amber-200 p-6 rounded-3xl shadow-sm">
-      <div class="flex items-start gap-5">
-        <div class="bg-amber-100 p-3 rounded-2xl">
-          <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-          </svg>
+    <!-- Statistik Utama -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+      <div class="lg:col-span-2 glass p-10 relative overflow-hidden">
+        <div class="absolute top-0 right-0 p-8 opacity-5">
+           <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path></svg>
         </div>
-        <div class="flex-1">
-          <h3 class="font-black text-amber-900 uppercase text-sm tracking-wide">Penyambungan Terhad (Mod Simulasi Diaktifkan)</h3>
-          <p class="text-xs text-amber-700 mt-2 leading-relaxed">
-            API Google tidak membenarkan akses terus dari GitHub (Sekatan CORS). Sistem kini menggunakan <strong>Mod Simulasi</strong>.
-          </p>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <a href="/**
- * KEMASKINI KOD INI DI GOOGLE APPS SCRIPT EDITOR
- */
-
-function doGet(e) {
-  const action = e.parameter.action;
-  const sheetId = "11dkbToz73vc1PZwF1LT-epIMnns_1Ae1HDfeISzViZU";
-  const ss = SpreadsheetApp.openById(sheetId);
-  const sheet = ss.getSheets()[0];
-  
-  if (action === 'read') {
-    const data = sheet.getDataRange().getValues();
-    const rows = data.slice(1).filter(row => row[1] !== "");
-    
-    // PENTING: Mesti gunakan MimeType.JSON untuk benarkan GitHub baca data
-    return ContentService.createTextOutput(JSON.stringify({ rows: rows }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-function doPost(e) {
-  const sheetId = "11dkbToz73vc1PZwF1LT-epIMnns_1Ae1HDfeISzViZU";
-  const ss = SpreadsheetApp.openById(sheetId);
-  const sheet = ss.getSheets()[0];
-  
-  const postData = JSON.parse(e.postData.contents);
-  if (postData.action === 'update') {
-    const rowIndex = postData.index;
-    const marks = postData.marks;
-    
-    // Kemaskini kolum HP1, HP5, T2-KUMP, T2-INDT
-    sheet.getRange(rowIndex + 1, 6).setValue(marks.hp1);
-    sheet.getRange(rowIndex + 1, 7).setValue(marks.hp5);
-    sheet.getRange(rowIndex + 1, 9).setValue(marks.t2kump);
-    sheet.getRange(rowIndex + 1, 10).setValue(marks.t2indt);
-    
-    return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}" target="_blank" class="bg-white border border-amber-200 text-amber-600 px-3 py-1.5 rounded-xl text-[10px] font-bold hover:bg-amber-50 transition">Buka API Di Tab Baru ↗</a>
-            <button onclick="loadData()" class="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold hover:bg-amber-700 transition active:scale-95">Muat Semula API</button>
-          </div>
+        <div class="flex justify-between items-center mb-10 relative z-10">
+          <h3 class="font-black text-xs uppercase tracking-[0.3em] text-blue-400/70">Taburan Gred Pelajar</h3>
+          <select id="filterKelas" onchange="loadData()" class="glass-card text-[10px] font-black px-5 py-2.5 rounded-xl border-0 outline-none focus:ring-2 focus:ring-blue-500 transition cursor-pointer text-white appearance-none pr-10 bg-no-repeat bg-[right_1rem_center]">
+            <option value="Semua">Semua Kelas</option>
+          </select>
         </div>
-      </div>
-    </div>
-
-    <!-- Ringkasan Visual -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-      <div class="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="font-black text-slate-400 uppercase text-[10px] tracking-widest">Taburan Gred Keseluruhan</h3>
-          <div class="flex gap-2">
-            <span class="w-3 h-3 rounded-full bg-green-500"></span>
-            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-          </div>
-        </div>
-        <div class="h-56">
+        <div class="h-64 relative z-10">
           <canvas id="gradeChart"></canvas>
         </div>
       </div>
-      <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
-        <h3 class="font-black text-slate-400 uppercase text-[10px] tracking-widest mb-4">Purata Markah Kelas</h3>
-        <div id="avg-mark" class="text-7xl font-black text-blue-700 tracking-tighter">0.0</div>
-        <div class="mt-6 px-5 py-1.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">Wajaran 100%</div>
+      
+      <div class="glass p-10 flex flex-col justify-center items-center text-center group">
+        <h3 class="font-black text-xs uppercase tracking-[0.3em] text-blue-400/70 mb-6">Purata Markah Kelas</h3>
+        <div id="avg-mark" class="text-9xl font-black text-glow tracking-tighter transition-all group-hover:scale-110">0.0</div>
+        <div class="mt-10 px-8 py-3 glass-card rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] text-blue-300">Indeks Prestasi Semasa</div>
       </div>
     </div>
 
-    <!-- Senarai Data -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-      <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-        <h2 class="font-black text-slate-700 uppercase text-xs tracking-widest">Senarai Pemarkahan Pelajar</h2>
-        <div class="flex gap-2">
-           <div id="host-badge" class="bg-white px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-200 text-slate-400 uppercase tracking-widest">Deployment</div>
-        </div>
+    <!-- Jadual Data -->
+    <div class="glass overflow-hidden shadow-2xl border-white/5">
+      <div class="p-8 border-b border-white/5 flex justify-between items-center bg-white/2">
+        <h2 class="font-black uppercase text-xs tracking-[0.3em] flex items-center gap-4">
+          <span class="w-3 h-3 bg-blue-500 rounded-full animate-pulse shadow-[0_0_15px_#3b82f6]"></span>
+          Pangkalan Data Pemarkahan
+        </h2>
+        <div class="text-[9px] font-black opacity-30 uppercase tracking-[0.5em]">Live Data Stream</div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left border-collapse">
           <thead>
-            <tr class="bg-white text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-100">
-              <th class="p-6 font-black">Maklumat Pelajar</th>
-              <th class="p-6 font-black">HP1 (30)</th>
-              <th class="p-6 font-black">HP5 (10)</th>
-              <th class="p-6 font-black">T2 (60)</th>
-              <th class="p-6 font-black">Jumlah</th>
-              <th class="p-6 font-black text-center">Gred</th>
-              <th class="p-6 font-black text-center">Aksi</th>
+            <tr class="text-blue-400/40 text-[10px] uppercase tracking-[0.3em] font-black border-b border-white/5">
+              <th class="p-8">Profil Pelajar</th>
+              <th class="p-8 text-center">HP1 (30)</th>
+              <th class="p-8 text-center">HP5 (10)</th>
+              <th class="p-8 text-center">T2 (60)</th>
+              <th class="p-8 text-center">Total</th>
+              <th class="p-8 text-center">Gred</th>
+              <th class="p-8 text-center">Aksi</th>
             </tr>
           </thead>
-          <tbody id="student-list" class="divide-y divide-slate-50">
-            <!-- Data akan dimuatkan melalui JavaScript -->
+          <tbody id="student-list" class="divide-y divide-white/5">
+            <!-- Data akan dimuatkan di sini -->
           </tbody>
         </table>
       </div>
@@ -179,127 +198,103 @@ function doPost(e) {
   </main>
 
   <!-- Modal Edit -->
-  <div id="modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl transition-all scale-100">
-      <div class="flex justify-between items-start mb-8">
+  <div id="modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center p-8 z-50">
+    <div class="glass w-full max-w-xl p-12 shadow-3xl transform transition-all border-white/20 relative overflow-hidden">
+      <div class="absolute -top-20 -left-20 w-60 h-60 bg-blue-600/10 rounded-full blur-3xl"></div>
+      
+      <div class="flex justify-between items-start mb-12 relative z-10">
         <div>
-          <h2 class="text-2xl font-black text-slate-800 leading-tight" id="modal-name">Nama Pelajar</h2>
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Kemaskini Markah MPU3221</p>
+          <h2 class="text-3xl font-black text-glow leading-none uppercase tracking-tighter" id="modal-name">Nama Pelajar</h2>
+          <p class="text-[10px] font-black text-blue-400 uppercase tracking-[0.3em] mt-4 opacity-60">Kemas Kini Rekod Pemarkahan</p>
         </div>
-        <button onclick="closeModal()" class="text-slate-300 hover:text-slate-500 p-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        <button onclick="closeModal()" class="p-3 glass-card rounded-2xl hover:bg-white/10 transition-all active:scale-90">
+          <svg class="w-6 h-6 text-white/50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
       
-      <div class="grid grid-cols-2 gap-5 mb-10">
+      <div class="grid grid-cols-2 gap-8 mb-12 relative z-10">
         <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">HP1 (30)</label>
-          <input type="number" id="inp-hp1" max="30" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
+          <label class="block text-[10px] font-black text-white/30 uppercase mb-4 tracking-widest">HP1 (Maks 30)</label>
+          <input type="number" id="inp-hp1" max="30" class="w-full p-5 glass-card rounded-2xl focus:ring-2 focus:ring-blue-500 font-black text-white outline-none transition-all placeholder-white/10" placeholder="0">
         </div>
         <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">HP5 (10)</label>
-          <input type="number" id="inp-hp5" max="10" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
+          <label class="block text-[10px] font-black text-white/30 uppercase mb-4 tracking-widest">HP5 (Maks 10)</label>
+          <input type="number" id="inp-hp5" max="10" class="w-full p-5 glass-card rounded-2xl focus:ring-2 focus:ring-blue-500 font-black text-white outline-none transition-all placeholder-white/10" placeholder="0">
         </div>
         <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">T2-KUMP (30)</label>
-          <input type="number" id="inp-t2k" max="30" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
+          <label class="block text-[10px] font-black text-white/30 uppercase mb-4 tracking-widest">T2-KUMP (Maks 30)</label>
+          <input type="number" id="inp-t2k" max="30" class="w-full p-5 glass-card rounded-2xl focus:ring-2 focus:ring-blue-500 font-black text-white outline-none transition-all placeholder-white/10" placeholder="0">
         </div>
         <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">T2-INDT (30)</label>
-          <input type="number" id="inp-t2i" max="30" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
+          <label class="block text-[10px] font-black text-white/30 uppercase mb-4 tracking-widest">T2-INDT (Maks 30)</label>
+          <input type="number" id="inp-t2i" max="30" class="w-full p-5 glass-card rounded-2xl focus:ring-2 focus:ring-blue-500 font-black text-white outline-none transition-all placeholder-white/10" placeholder="0">
         </div>
       </div>
       
-      <button onclick="saveMarks()" class="w-full py-5 bg-blue-600 text-white font-black rounded-3xl shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all text-xs uppercase tracking-widest">
-        Simpan Rekod Pelajar
+      <button onclick="saveMarks()" class="w-full py-6 bg-gradient-to-br from-blue-600 to-indigo-700 text-white font-black rounded-3xl shadow-2xl shadow-blue-500/30 hover:shadow-blue-500/50 transform hover:-translate-y-1 active:scale-95 transition-all text-xs uppercase tracking-[0.2em] relative z-10">
+        Sahkan Perubahan Data
       </button>
     </div>
   </div>
 
   <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzLVsO8AhTqAoAZcyAskNyVa2LsLB68Kt2NAN7G51Mz28_a-Y4hEw65MS3e8us9DrDMRA/exec";
+    // URL API dari pengguna
+    const API_URL = "https://script.google.com/macros/s/AKfycby98sjispJCfvkUtYgZzrY_hHlmCkmyAjIGEaNh6t4e6mn2w4p2ZIaz0J3964b9wkDyNA/exec";
 
     let currentData = [];
     let selectedIndex = null;
     let myChart = null;
 
     /**
-     * Memuatkan data secara selamat dengan timeout dan fallback
+     * Memuatkan data dari API atau Google Script
      */
     async function loadData() {
       const loadingEl = document.getElementById('loading');
       if (loadingEl) loadingEl.style.display = 'flex';
       
+      const filterKelas = document.getElementById('filterKelas').value;
+
       try {
-        // Keutamaan: Google Script Run jika dijalankan dalam persekitaran GAS
+        // Semak jika dalam persekitaran GAS
         if (typeof google !== 'undefined' && google.script && google.script.run) {
-          updateStatus("Live: Google Script", "bg-green-500");
-          google.script.run
-            .withSuccessHandler(data => showData(data))
-            .withFailureHandler(err => handleError(err))
-            .getSheetData();
-          return;
+          google.script.run.withSuccessHandler(showData).getSheetData(filterKelas);
+          google.script.run.withSuccessHandler(populateClasses).getUniqueClasses();
+        } else {
+          // Guna Fetch API (Untuk GitHub/Standalone)
+          const response = await fetch(`${API_URL}?action=read&kelas=${filterKelas}`);
+          const data = await response.json();
+          showData(data);
+          
+          const classResp = await fetch(`${API_URL}?action=getClasses`);
+          const classes = await classResp.json();
+          populateClasses(classes);
         }
-
-        // Percubaan ke-2: Fetch API Luaran
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 saat timeout
-
-        const response = await fetch(`${API_URL}?action=read`, {
-          method: 'GET',
-          redirect: 'follow',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error("Respons API gagal");
-        
-        const data = await response.json();
-        updateStatus("Live: API Luaran", "bg-green-500");
-        showData(data);
-
       } catch (error) {
-        console.warn("Fetch Error atau Timeout:", error.message);
-        handleError(error);
+        console.error("Sambungan Gagal:", error);
+        simulateData();
       }
     }
 
-    /**
-     * Pengurusan ralat yang lebih stabil
-     */
-    function handleError(err) {
-      const statusText = document.getElementById('connection-status');
-      const statusDot = document.getElementById('status-dot');
-      const warningBox = document.getElementById('api-warning');
-      const badge = document.getElementById('host-badge');
-
-      if (statusText) statusText.innerText = "Status: Mod Simulasi (CORS)";
-      if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-amber-500";
-      if (warningBox) warningBox.classList.remove('hidden');
-      if (badge) {
-        badge.innerText = "Mod Simulasi";
-        badge.classList.replace('text-slate-400', 'text-amber-500');
-        badge.classList.add('border-amber-100');
+    function populateClasses(classes) {
+      const select = document.getElementById('filterKelas');
+      const currentVal = select.value;
+      select.innerHTML = '<option value="Semua">Semua Kelas</option>';
+      if(classes && classes.classes) {
+        classes.classes.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          select.appendChild(opt);
+        });
+        select.value = currentVal;
       }
-      
-      simulateData();
-    }
-
-    function updateStatus(text, colorClass) {
-      const statusText = document.getElementById('connection-status');
-      const statusDot = document.getElementById('status-dot');
-      if (statusText) statusText.innerText = `Status: ${text}`;
-      if (statusDot) statusDot.className = `w-2 h-2 rounded-full ${colorClass}`;
     }
 
     function simulateData() {
       const mockData = {
         rows: [
-          [1, "Muhammad Amin (Simulasi)", "000101-01-0001", "202401", "PBKK1", 28, 9, 37, 26, 26, 52, 89.0, "A"],
-          [2, "Siti Nurhaliza (Simulasi)", "000202-02-0002", "202402", "PIMK1", 21, 6, 27, 20, 20, 40, 67.0, "B"],
-          [3, "Ramasamy (Simulasi)", "000303-03-0003", "202403", "PKBK1", 24, 7, 31, 23, 23, 46, 77.0, "A-"],
-          [4, "Tan Ah Beng (Simulasi)", "000404-04-0004", "202404", "PSVK1", 15, 4, 19, 15, 15, 30, 49.0, "D"]
+          [1, "Muhammad Aliff (Mock)", "000101", "202401", "PBKK1", 28.5, 9.2, 37.7, 26, 26, 52, 89.7, "A"],
+          [2, "Nurul Izzah (Mock)", "000202", "202402", "PIMK1", 22.0, 6.5, 28.5, 20, 20, 40, 68.5, "B"]
         ]
       };
       showData(mockData);
@@ -307,18 +302,14 @@ function doPost(e) {
 
     function showData(data) {
       if (!data || !data.rows) return;
-      
       currentData = data.rows;
       const list = document.getElementById('student-list');
-      if (!list) return;
-      
       list.innerHTML = "";
       
       let totalSum = 0;
-      let gradeCounts = { 'A':0, 'B':0, 'C':0, 'D/F':0 };
+      let gradeCounts = { 'A':0, 'B':0, 'C':0, 'Lain':0 };
 
       currentData.forEach((row, index) => {
-        // Pemetaan: 5=HP1, 6=HP5, 8=T2K, 9=T2I, 11=Jumlah, 12=Gred
         const hp1 = Number(row[5]) || 0;
         const hp5 = Number(row[6]) || 0;
         const t2k = Number(row[8]) || 0;
@@ -330,68 +321,50 @@ function doPost(e) {
         if(gred.startsWith('A')) gradeCounts['A']++;
         else if(gred.startsWith('B')) gradeCounts['B']++;
         else if(gred.startsWith('C')) gradeCounts['C']++;
-        else gradeCounts['D/F']++;
+        else gradeCounts['Lain']++;
 
         list.innerHTML += `
-          <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
-            <td class="p-6">
-              <div class="font-black text-slate-800 text-sm uppercase">${row[1]}</div>
-              <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">${row[3] || 'TIADA ID'} | ${row[4] || 'TIADA KELAS'}</div>
+          <tr class="glass-card group">
+            <td class="p-8">
+              <div class="font-black text-sm uppercase tracking-tight group-hover:text-blue-400 transition-colors">${row[1]}</div>
+              <div class="text-[9px] text-blue-400 font-black uppercase tracking-widest mt-2 opacity-50">${row[3]} | ${row[4]}</div>
             </td>
-            <td class="p-6 text-xs font-black text-slate-500">${hp1}</td>
-            <td class="p-6 text-xs font-black text-slate-500">${hp5}</td>
-            <td class="p-6 text-xs font-black text-slate-500">${(t2k + t2i)}</td>
-            <td class="p-6">
-              <span class="text-xl font-black text-blue-700 tracking-tighter">${total.toFixed(1)}</span>
+            <td class="p-8 text-center text-xs font-bold opacity-50">${hp1}</td>
+            <td class="p-8 text-center text-xs font-bold opacity-50">${hp5}</td>
+            <td class="p-8 text-center text-xs font-bold opacity-50">${(t2k + t2i)}</td>
+            <td class="p-8 text-center">
+              <span class="text-2xl font-black text-glow tracking-tighter">${total.toFixed(1)}</span>
             </td>
-            <td class="p-6 text-center">
-              <span class="inline-block min-w-[3.5rem] px-4 py-2 rounded-2xl text-[10px] font-black border shadow-sm ${getGredStyle(gred)}">
+            <td class="p-8 text-center">
+              <span class="inline-block min-w-[4rem] px-5 py-2.5 rounded-2xl text-[10px] font-black border shadow-xl ${getGredStyle(gred)}">
                 ${gred}
               </span>
             </td>
-            <td class="p-6 text-center">
-              <button onclick="openModal(${index})" class="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition shadow-lg active:scale-95">Edit</button>
+            <td class="p-8 text-center">
+              <button onclick="openModal(${index})" class="glass-card px-6 py-3 rounded-2xl text-[9px] font-black uppercase tracking-[0.2em] hover:bg-blue-600 hover:text-white transition-all shadow-lg active:scale-90">Edit</button>
             </td>
           </tr>
         `;
       });
 
-      const countEl = document.getElementById('stat-count');
-      const avgEl = document.getElementById('avg-mark');
-      if (countEl) countEl.innerText = `${currentData.length} Pelajar Terdaftar`;
-      if (avgEl) avgEl.innerText = currentData.length > 0 ? (totalSum / currentData.length).toFixed(1) : "0.0";
-      
+      document.getElementById('stat-count').innerText = `${currentData.length} Pelajar Terdaftar`;
+      document.getElementById('avg-mark').innerText = currentData.length > 0 ? (totalSum / currentData.length).toFixed(1) : "0.0";
       updateChart(gradeCounts);
-      
-      // Sembunyikan skrin pemuatan
-      setTimeout(() => { 
-        const loading = document.getElementById('loading');
-        if (loading) loading.style.display = 'none'; 
-      }, 500);
+      setTimeout(() => { document.getElementById('loading').style.display = 'none'; }, 700);
     }
 
     function openModal(index) {
       selectedIndex = index;
       const row = currentData[index];
-      const modalName = document.getElementById('modal-name');
-      const inp1 = document.getElementById('inp-hp1');
-      const inp5 = document.getElementById('inp-hp5');
-      const inpT2k = document.getElementById('inp-t2k');
-      const inpT2i = document.getElementById('inp-t2i');
-      const modal = document.getElementById('modal');
-
-      if (modalName) modalName.innerText = row[1];
-      if (inp1) inp1.value = row[5];
-      if (inp5) inp5.value = row[6];
-      if (inpT2k) inpT2k.value = row[8];
-      if (inpT2i) inpT2i.value = row[9];
-      if (modal) modal.classList.remove('hidden');
+      document.getElementById('modal-name').innerText = row[1];
+      document.getElementById('inp-hp1').value = row[5];
+      document.getElementById('inp-hp5').value = row[6];
+      document.getElementById('inp-t2k').value = row[8];
+      document.getElementById('inp-t2i').value = row[9];
+      document.getElementById('modal').classList.remove('hidden');
     }
 
-    function closeModal() { 
-      const modal = document.getElementById('modal');
-      if (modal) modal.classList.add('hidden'); 
-    }
+    function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
     async function saveMarks() {
       const marks = {
@@ -401,47 +374,54 @@ function doPost(e) {
         t2indt: document.getElementById('inp-t2i').value
       };
       
-      const loading = document.getElementById('loading');
-      const loadingText = document.getElementById('loading-text');
-      if (loading) loading.style.display = 'flex';
-      if (loadingText) loadingText.innerText = "Menyimpan Rekod...";
+      document.getElementById('loading').style.display = 'flex';
       
-      try {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.withSuccessHandler(() => { closeModal(); loadData(); }).updateStudentMark(selectedIndex + 1, marks);
-        } else {
-          // Simulasi di persekitaran bukan GAS
-          console.info("Mod Simulasi: Markah tidak disimpan secara kekal.");
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(() => { closeModal(); loadData(); }).updateStudentMark(selectedIndex + 1, marks);
+      } else {
+        // POST menggunakan Fetch jika di luar persekitaran GAS
+        try {
+          await fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ action: 'update', index: selectedIndex + 1, marks: marks })
+          });
+          alert("Permintaan simpan dihantar! Sila tunggu sebentar untuk sinkronisasi.");
           setTimeout(() => { closeModal(); loadData(); }, 1500);
+        } catch(e) {
+          closeModal();
+          loadData();
         }
-      } catch (err) {
-        console.error("Save Error:", err);
-        closeModal();
-        loadData();
       }
     }
 
     function getGredStyle(g) {
-      if(g.startsWith('A')) return 'bg-green-50 text-green-700 border-green-100';
-      if(g.startsWith('B')) return 'bg-blue-50 text-blue-700 border-blue-100';
-      if(g.startsWith('C')) return 'bg-amber-50 text-amber-700 border-amber-100';
-      return 'bg-rose-50 text-rose-700 border-rose-100';
+      if(g.startsWith('A')) return 'bg-green-500/20 text-green-400 border-green-500/30 shadow-[0_0_15px_rgba(34,197,94,0.2)]';
+      if(g.startsWith('B')) return 'bg-blue-500/20 text-blue-400 border-blue-500/30 shadow-[0_0_15px_rgba(59,130,246,0.2)]';
+      if(g.startsWith('C')) return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 shadow-[0_0_15px_rgba(234,179,8,0.2)]';
+      return 'bg-red-500/20 text-red-400 border-red-500/30 shadow-[0_0_15px_rgba(239,68,68,0.2)]';
     }
 
     function updateChart(counts) {
-      const canvas = document.getElementById('gradeChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
+      const ctx = document.getElementById('gradeChart').getContext('2d');
       if (myChart) myChart.destroy();
+      
       myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['A (CEMERLANG)', 'B (KEPUJIAN)', 'C (LULUS)', 'D/F (GAGAL)'],
+          labels: ['A (CEMERLANG)', 'B (KEPUJIAN)', 'C (LULUS)', 'LAIN'],
           datasets: [{
-            data: [counts['A'], counts['B'], counts['C'], counts['D/F']],
-            backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#f43f5e'],
-            borderRadius: 12,
-            barThickness: 40
+            data: [counts['A'], counts['B'], counts['C'], counts['Lain']],
+            backgroundColor: [
+              'rgba(34, 197, 94, 0.6)', 
+              'rgba(59, 130, 246, 0.6)', 
+              'rgba(234, 179, 8, 0.6)', 
+              'rgba(239, 68, 68, 0.6)'
+            ],
+            borderColor: 'rgba(255, 255, 255, 0.2)',
+            borderWidth: 2,
+            borderRadius: 16,
+            barThickness: 45
           }]
         },
         options: {
@@ -449,14 +429,21 @@ function doPost(e) {
           maintainAspectRatio: false,
           plugins: { legend: { display: false } },
           scales: { 
-            y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1, color: '#94a3b8' } }, 
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { weight: 'bold', size: 9 } } } 
+            y: { 
+              beginAtZero: true, 
+              grid: { color: 'rgba(255,255,255,0.05)' }, 
+              ticks: { color: 'rgba(255,255,255,0.4)', font: { weight: '800', size: 10 } } 
+            }, 
+            x: { 
+              grid: { display: false }, 
+              ticks: { color: 'rgba(255,255,255,0.6)', font: { size: 9, weight: '900' } } 
+            } 
           }
         }
       });
     }
 
-    // Jalankan loadData sebaik sahaja DOM sedia
+    // Memulakan aplikasi
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
 </body>
