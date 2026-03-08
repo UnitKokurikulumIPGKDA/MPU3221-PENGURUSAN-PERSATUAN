@@ -11,18 +11,16 @@
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: #0f172a; min-height: 100vh; color: white; }
     .abstract-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: radial-gradient(circle at 10% 20%, #1e3a8a 0%, transparent 40%), radial-gradient(circle at 90% 80%, #581c87 0%, transparent 40%), radial-gradient(circle at 50% 50%, #1e1b4b 0%, #0f172a 100%); }
-    .blob { position: absolute; width: 600px; height: 600px; background: linear-gradient(135deg, #3b82f6 0%, #a855f7 100%); filter: blur(100px); border-radius: 50%; opacity: 0.1; animation: move 25s infinite alternate ease-in-out; }
-    @keyframes move { 0% { transform: translate(-15%, -15%) rotate(0deg) scale(1); } 100% { transform: translate(25%, 25%) rotate(360deg) scale(1.2); } }
     .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; }
     .glass-card { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); transition: all 0.3s ease; }
-    .glass-card:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-4px); }
     .text-glow { text-shadow: 0 0 15px rgba(59, 130, 246, 0.6); }
     .loading-overlay { background: #0f172a; display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
   </style>
 </head>
 <body>
 
-  <div class="abstract-bg"><div class="blob"></div></div>
+  <div class="abstract-bg"></div>
 
   <div id="loading" class="loading-overlay">
     <div class="w-16 h-16 border-4 border-t-blue-500 border-blue-500/10 rounded-full animate-spin mb-4"></div>
@@ -34,12 +32,12 @@
       <div class="flex items-center gap-4">
         <h1 class="text-xl font-extrabold tracking-tighter uppercase">MPU3221 <span class="text-blue-500">Analytics</span></h1>
       </div>
-      <div class="flex items-center gap-4">
+      <div class="flex items-center gap-6">
         <div class="text-right">
           <div id="status-text" class="text-[10px] font-black text-blue-300 uppercase">Menunggu...</div>
           <div id="stat-count" class="text-[9px] opacity-40">0 Rekod</div>
         </div>
-        <button onclick="loadData()" class="p-2 glass rounded-xl hover:bg-white/10 transition-all">
+        <button onclick="loadData()" class="p-2 glass rounded-xl hover:bg-white/10 transition-all active:scale-90">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
         </button>
       </div>
@@ -50,33 +48,41 @@
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
       <div class="lg:col-span-2 glass p-8">
         <div class="flex justify-between items-center mb-6">
-          <h3 class="text-xs font-black uppercase text-blue-400">Taburan Gred</h3>
-          <select id="filterKelas" onchange="loadData()" class="bg-white/5 border-0 text-[10px] rounded-lg px-4 py-2 outline-none">
-            <option value="Semua">Semua Kelas</option>
-          </select>
+          <h3 class="text-xs font-black uppercase text-blue-400 tracking-widest">Taburan Gred</h3>
+          <div class="flex gap-3">
+            <select id="filterKelas" onchange="loadData()" class="bg-white/5 border border-white/10 text-[10px] font-bold rounded-lg px-4 py-2 outline-none focus:border-blue-500 transition">
+              <option value="Semua">Semua Kelas</option>
+            </select>
+          </div>
         </div>
         <div class="h-64"><canvas id="gradeChart"></canvas></div>
       </div>
-      <div class="glass p-8 flex flex-col justify-center items-center">
-        <h3 class="text-xs font-black uppercase text-blue-400 mb-4">Purata Markah</h3>
-        <div id="avg-mark" class="text-8xl font-black text-glow">0.0</div>
+      <div class="glass p-8 flex flex-col justify-center items-center text-center">
+        <h3 class="text-xs font-black uppercase text-blue-400 mb-4 tracking-widest">Purata Markah</h3>
+        <div id="avg-mark" class="text-8xl font-black text-glow tracking-tighter">0.0</div>
+        <div class="mt-4 text-[10px] font-bold opacity-30 uppercase tracking-[0.3em]">Berdasarkan Filter</div>
       </div>
     </div>
 
     <div class="glass overflow-hidden">
-      <div class="p-6 border-b border-white/5 bg-white/5">
-        <h2 class="text-xs font-black uppercase tracking-widest">Senarai Pelajar</h2>
+      <div class="p-6 border-b border-white/5 bg-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
+        <h2 class="text-xs font-black uppercase tracking-widest">Senarai Pemarkahan Calon</h2>
+        <div class="relative w-full md:w-72">
+          <input type="text" id="searchName" onkeyup="filterTableBySearch()" placeholder="Cari nama pelajar..." 
+            class="w-full bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-xs outline-none focus:border-blue-500 transition">
+        </div>
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead>
             <tr class="text-[10px] uppercase text-white/30 border-b border-white/5">
-              <th class="p-6">Nama & Maklumat</th>
-              <th class="p-6 text-center">HP1</th>
-              <th class="p-6 text-center">HP5</th>
-              <th class="p-6 text-center">Jumlah</th>
+              <th class="p-6">Maklumat Pelajar</th>
+              <th class="p-6 text-center">HP1 (30)</th>
+              <th class="p-6 text-center">HP5 (10)</th>
+              <th class="p-6 text-center">T2 (60)</th>
+              <th class="p-6 text-center text-white">Jumlah</th>
               <th class="p-6 text-center">Gred</th>
-              <th class="p-6 text-center">Tindakan</th>
+              <th class="p-6 text-center">Aksi</th>
             </tr>
           </thead>
           <tbody id="student-list" class="divide-y divide-white/5"></tbody>
@@ -86,38 +92,37 @@
   </main>
 
   <div id="modal" class="hidden fixed inset-0 bg-black/90 backdrop-blur-md flex items-center justify-center z-50 p-4">
-    <div class="glass w-full max-w-lg p-10">
-      <h2 id="modal-name" class="text-2xl font-black uppercase mb-2">Nama Pelajar</h2>
-      <p class="text-xs text-blue-400 font-bold mb-8 uppercase">Kemas Kini Markah</p>
+    <div class="glass w-full max-w-lg p-10 transform scale-100 transition-all border-white/20">
+      <h2 id="modal-name" class="text-2xl font-black uppercase tracking-tighter mb-2">Nama Pelajar</h2>
+      <p class="text-[10px] text-blue-400 font-black mb-8 uppercase tracking-[0.2em]">Kemas Kini Rekod Cloud</p>
       
-      <div class="grid grid-cols-2 gap-4 mb-8">
+      <div class="grid grid-cols-2 gap-6 mb-10">
         <div>
-          <label class="text-[10px] uppercase opacity-50 block mb-2">HP1 (30)</label>
-          <input type="number" id="inp-hp1" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500">
+          <label class="text-[10px] font-black uppercase opacity-40 block mb-2">HP1 (30)</label>
+          <input type="number" id="inp-hp1" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm font-bold outline-none focus:border-blue-500 transition">
         </div>
         <div>
-          <label class="text-[10px] uppercase opacity-50 block mb-2">HP5 (10)</label>
-          <input type="number" id="inp-hp5" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500">
+          <label class="text-[10px] font-black uppercase opacity-40 block mb-2">HP5 (10)</label>
+          <input type="number" id="inp-hp5" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm font-bold outline-none focus:border-blue-500 transition">
         </div>
         <div>
-          <label class="text-[10px] uppercase opacity-50 block mb-2">T2-KUMP (30)</label>
-          <input type="number" id="inp-t2k" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500">
+          <label class="text-[10px] font-black uppercase opacity-40 block mb-2">T2-KUMP (30)</label>
+          <input type="number" id="inp-t2k" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm font-bold outline-none focus:border-blue-500 transition">
         </div>
         <div>
-          <label class="text-[10px] uppercase opacity-50 block mb-2">T2-INDT (30)</label>
-          <input type="number" id="inp-t2i" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 outline-none focus:border-blue-500">
+          <label class="text-[10px] font-black uppercase opacity-40 block mb-2">T2-INDT (30)</label>
+          <input type="number" id="inp-t2i" class="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-sm font-bold outline-none focus:border-blue-500 transition">
         </div>
       </div>
       
-      <div class="flex gap-3">
-        <button onclick="closeModal()" class="flex-1 py-4 rounded-xl font-bold uppercase text-xs bg-white/5">Batal</button>
-        <button onclick="saveMarks()" class="flex-[2] py-4 rounded-xl font-bold uppercase text-xs bg-blue-600 shadow-lg shadow-blue-500/20">Simpan Data</button>
+      <div class="flex gap-4">
+        <button onclick="closeModal()" class="flex-1 py-4 rounded-2xl font-black uppercase text-[10px] bg-white/5 hover:bg-white/10 transition tracking-widest">Batal</button>
+        <button onclick="saveMarks()" class="flex-[2] py-4 rounded-2xl font-black uppercase text-[10px] bg-blue-600 shadow-xl shadow-blue-500/20 hover:bg-blue-500 transition tracking-widest">Simpan Perubahan</button>
       </div>
     </div>
   </div>
 
   <script>
-    // GANTIKAN URL DI BAWAH DENGAN URL WEB APP ANDA
     const API_URL = "https://script.google.com/macros/s/AKfycbx6dRVWEHcv7N73dUv-w9KsmUofdvAWr5QvkABj_jL-MiMvi7lbX6-S9qvxhBsmhklC/exec";
 
     let currentData = [];
@@ -125,29 +130,35 @@
     let selectedIndex = null;
 
     async function loadData() {
-      showLoading(true, "Menarik Data...");
+      showLoading(true, "Memuatkan Data...");
       const kelas = document.getElementById('filterKelas').value;
       
       try {
         const response = await fetch(`${API_URL}?action=read&kelas=${kelas}`);
         const data = await response.json();
-        renderTable(data.rows);
-        updateStatus("Live (Connected)", "text-green-400");
         
-        // Load classes once
-        if (document.getElementById('filterKelas').options.length <= 1) {
+        currentData = data.rows;
+        renderTable(currentData);
+        updateStatus("Sistem Aktif", "text-green-400");
+        
+        // Load classes list only once
+        const classSelect = document.getElementById('filterKelas');
+        if (classSelect.options.length <= 1) {
           const resClasses = await fetch(`${API_URL}?action=getClasses`);
           const classesData = await resClasses.json();
-          populateClasses(classesData.classes);
+          classesData.classes.forEach(c => {
+            const opt = document.createElement('option');
+            opt.value = c; opt.innerText = c;
+            classSelect.appendChild(opt);
+          });
         }
       } catch (e) {
-        updateStatus("Connection Error", "text-red-400");
+        updateStatus("Ralat Sambungan", "text-red-400");
       }
       showLoading(false);
     }
 
     function renderTable(rows) {
-      currentData = rows;
       const list = document.getElementById('student-list');
       list.innerHTML = "";
       let totalMark = 0;
@@ -168,27 +179,34 @@
         else grades.Lain++;
 
         list.innerHTML += `
-          <tr class="hover:bg-white/[0.02]">
+          <tr class="hover:bg-white/[0.02] transition-colors">
             <td class="p-6">
-              <div class="font-bold text-sm uppercase">${row[1]}</div>
-              <div class="text-[9px] text-blue-400 uppercase tracking-tighter">${row[3]} | ${row[4]}</div>
+              <div class="font-black text-sm uppercase tracking-tight">${row[1]}</div>
+              <div class="text-[9px] text-blue-400 font-black uppercase mt-1 opacity-60">${row[3]} | ${row[4]}</div>
             </td>
-            <td class="p-6 text-center opacity-60 text-xs">${hp1.toFixed(1)}</td>
-            <td class="p-6 text-center opacity-60 text-xs">${hp5.toFixed(1)}</td>
-            <td class="p-6 text-center font-black text-lg text-blue-400">${total.toFixed(1)}</td>
+            <td class="p-6 text-center opacity-40 text-xs font-bold">${hp1.toFixed(1)}</td>
+            <td class="p-6 text-center opacity-40 text-xs font-bold">${hp5.toFixed(1)}</td>
+            <td class="p-6 text-center opacity-40 text-xs font-bold">${(t2k + t2i).toFixed(1)}</td>
+            <td class="p-6 text-center"><span class="text-xl font-black text-glow">${total.toFixed(1)}</span></td>
             <td class="p-6 text-center">
-              <span class="px-3 py-1 rounded-lg text-[10px] font-black border ${getGredColor(gred)}">${gred}</span>
+              <span class="inline-block min-w-[3.5rem] py-1.5 rounded-xl text-[9px] font-black border ${getGredStyle(gred)}">${gred}</span>
             </td>
             <td class="p-6 text-center">
-              <button onclick="openModal(${idx})" class="text-[10px] font-black uppercase text-blue-400 hover:text-white transition">Edit</button>
+              <button onclick="openModal(${idx})" class="px-4 py-2 glass-card rounded-lg text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition">Edit</button>
             </td>
           </tr>
         `;
       });
 
-      document.getElementById('stat-count').innerText = `${rows.length} Pelajar`;
+      document.getElementById('stat-count').innerText = `${rows.length} Rekod`;
       document.getElementById('avg-mark').innerText = rows.length ? (totalMark / rows.length).toFixed(1) : "0.0";
       updateChart(grades);
+    }
+
+    function filterTableBySearch() {
+      const query = document.getElementById('searchName').value.toUpperCase();
+      const filtered = currentData.filter(row => String(row[1]).toUpperCase().includes(query));
+      renderTable(filtered);
     }
 
     async function saveMarks() {
@@ -199,22 +217,21 @@
         t2indt: document.getElementById('inp-t2i').value
       };
       
-      const bilID = currentData[selectedIndex][0];
-      showLoading(true, "Menyimpan ke Cloud...");
+      const realIndex = currentData[selectedIndex][0];
+      showLoading(true, "Menyimpan...");
 
       try {
         await fetch(API_URL, {
           method: 'POST',
-          body: JSON.stringify({ action: 'update', index: bilID, marks: marks })
+          body: JSON.stringify({ action: 'update', index: realIndex, marks: marks })
         });
         
-        // Beri masa 2 saat untuk Google Sheets proses formula sebelum refresh
         setTimeout(() => {
           closeModal();
           loadData();
-        }, 2000);
+        }, 1500);
       } catch (e) {
-        alert("Gagal simpan. Sila cuba lagi.");
+        alert("Gagal menyimpan data.");
         showLoading(false);
       }
     }
@@ -232,30 +249,21 @@
 
     function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
-    function getGredColor(g) {
+    function getGredStyle(g) {
       if(g.startsWith('A')) return 'text-green-400 border-green-500/30 bg-green-500/10';
       if(g.startsWith('B')) return 'text-blue-400 border-blue-500/30 bg-blue-500/10';
+      if(g.startsWith('C')) return 'text-yellow-400 border-yellow-500/30 bg-yellow-500/10';
       return 'text-red-400 border-red-500/30 bg-red-500/10';
     }
 
-    function showLoading(show, text = "") {
-      document.getElementById('loading').style.display = show ? 'flex' : 'none';
-      if(text) document.getElementById('loading-text').innerText = text;
+    function showLoading(s, t) {
+      document.getElementById('loading').style.display = s ? 'flex' : 'none';
+      if(t) document.getElementById('loading-text').innerText = t;
     }
 
-    function updateStatus(txt, cls) {
+    function updateStatus(t, c) {
       const el = document.getElementById('status-text');
-      el.innerText = txt;
-      el.className = `text-[10px] font-black uppercase ${cls}`;
-    }
-
-    function populateClasses(classes) {
-      const sel = document.getElementById('filterKelas');
-      classes.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c; opt.innerText = c;
-        sel.appendChild(opt);
-      });
+      el.innerText = t; el.className = `text-[10px] font-black uppercase ${c}`;
     }
 
     function updateChart(data) {
@@ -264,14 +272,24 @@
       myChart = new Chart(ctx, {
         type: 'bar',
         data: {
-          labels: ['A', 'B', 'C', 'Lain'],
+          labels: ['GRED A', 'GRED B', 'GRED C', 'LAIN'],
           datasets: [{
             data: [data.A, data.B, data.C, data.Lain],
-            backgroundColor: ['#22c55e', '#3b82f6', '#eab308', '#ef4444'],
-            borderRadius: 8
+            backgroundColor: ['rgba(34,197,94,0.5)', 'rgba(59,130,246,0.5)', 'rgba(234,179,8,0.5)', 'rgba(239,68,68,0.5)'],
+            borderColor: ['#22c55e', '#3b82f6', '#eab308', '#ef4444'],
+            borderWidth: 1,
+            borderRadius: 10
           }]
         },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } } } }
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: 'rgba(255,255,255,0.4)', stepSize: 1 } },
+            x: { grid: { display: false }, ticks: { color: 'rgba(255,255,255,0.5)', font: { size: 9, weight: 'bold' } } }
+          }
+        }
       });
     }
 
