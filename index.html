@@ -1,87 +1,4 @@
-<!DOCTYPE html>
-<html lang="ms">
-<head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPU3221: Analisis Markah (GitHub Version)</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    .loading-overlay {
-      background: rgba(255,255,255,0.95);
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      z-index: 9999;
-    }
-    .glass-card {
-      background: rgba(255, 255, 255, 0.8);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.3);
-    }
-    .animate-pulse-slow {
-      animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-  </style>
-</head>
-<body class="bg-slate-50 text-slate-900 font-sans">
-
-  <!-- Skrin Pemuatan -->
-  <div id="loading" class="loading-overlay">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600 mb-4"></div>
-    <div class="text-lg font-bold text-slate-700 animate-pulse" id="loading-text">Menyambung ke Pangkalan Data...</div>
-    <p class="text-xs text-slate-400 mt-2 italic">Sila tunggu sebentar sementara kami mengesahkan API</p>
-  </div>
-
-  <!-- Navigasi -->
-  <nav class="bg-blue-700 text-white sticky top-0 z-40 shadow-md">
-    <div class="container mx-auto px-4 py-3 flex justify-between items-center">
-      <div class="flex items-center gap-3">
-        <div class="bg-white p-2 rounded-xl shadow-inner">
-          <svg class="w-6 h-6 text-blue-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-          </svg>
-        </div>
-        <div>
-          <h1 class="text-lg font-black leading-none uppercase tracking-tight">MPU3221</h1>
-          <p class="text-[10px] font-medium text-blue-100 mt-1 uppercase tracking-widest">Sistem Analisis Markah</p>
-        </div>
-      </div>
-      <div class="text-right flex flex-col items-end">
-        <div id="stat-count" class="bg-blue-800 px-3 py-1 rounded-full text-[10px] font-bold">0 Pelajar</div>
-        <div class="flex items-center gap-1.5 mt-1">
-          <span id="status-dot" class="w-2 h-2 rounded-full bg-blue-400"></span>
-          <div id="connection-status" class="text-[8px] text-blue-300 font-mono italic">Status: Menunggu...</div>
-        </div>
-      </div>
-    </div>
-  </nav>
-
-  <main class="container mx-auto px-4 py-8">
-    
-    <!-- Amaran CORS untuk GitHub Hosting -->
-    <div id="api-warning" class="hidden mb-8 bg-white border border-amber-200 p-6 rounded-3xl shadow-sm">
-      <div class="flex items-start gap-5">
-        <div class="bg-amber-100 p-3 rounded-2xl">
-          <svg class="h-6 w-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-          </svg>
-        </div>
-        <div class="flex-1">
-          <h3 class="font-black text-amber-900 uppercase text-sm tracking-wide">Penyambungan Terhad (Mod Simulasi Diaktifkan)</h3>
-          <p class="text-xs text-amber-700 mt-2 leading-relaxed">
-            API Google tidak membenarkan akses terus dari GitHub (Sekatan CORS). Sistem kini menggunakan <strong>Mod Simulasi</strong>.
-          </p>
-          <div class="mt-4 flex flex-wrap gap-2">
-            <a href="/**
+/**
  * KEMASKINI KOD INI DI GOOGLE APPS SCRIPT EDITOR
  */
 
@@ -91,12 +8,31 @@ function doGet(e) {
   const ss = SpreadsheetApp.openById(sheetId);
   const sheet = ss.getSheets()[0];
   
+  // Ambil semua data dari sheet
+  const data = sheet.getDataRange().getValues();
+  const headers = data[0];
+  const allRows = data.slice(1).filter(row => row[1] !== ""); // Filter baris yang mempunyai nama
+  
   if (action === 'read') {
-    const data = sheet.getDataRange().getValues();
-    const rows = data.slice(1).filter(row => row[1] !== "");
+    let rows = allRows;
     
-    // PENTING: Mesti gunakan MimeType.JSON untuk benarkan GitHub baca data
+    // Logik Filter mengikut kelas
+    const kelasFilter = e.parameter.kelas;
+    if (kelasFilter && kelasFilter !== "Semua") {
+      // Indeks 4 merujuk kepada kolum 'KELAS'
+      rows = rows.filter(row => row[4] == kelasFilter);
+    }
+    
     return ContentService.createTextOutput(JSON.stringify({ rows: rows }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // Fungsi tambahan untuk mendapatkan senarai kelas unik bagi menu filter
+  if (action === 'getClasses') {
+    const classes = allRows.map(row => row[4]);
+    const uniqueClasses = [...new Set(classes)].filter(c => c !== "").sort();
+    
+    return ContentService.createTextOutput(JSON.stringify({ classes: uniqueClasses }))
       .setMimeType(ContentService.MimeType.JSON);
   }
 }
@@ -112,6 +48,7 @@ function doPost(e) {
     const marks = postData.marks;
     
     // Kemaskini kolum HP1, HP5, T2-KUMP, T2-INDT
+    // Pastikan indeks kolum adalah betul (F=6, G=7, I=9, J=10)
     sheet.getRange(rowIndex + 1, 6).setValue(marks.hp1);
     sheet.getRange(rowIndex + 1, 7).setValue(marks.hp5);
     sheet.getRange(rowIndex + 1, 9).setValue(marks.t2kump);
@@ -120,344 +57,4 @@ function doPost(e) {
     return ContentService.createTextOutput(JSON.stringify({ status: "success" }))
       .setMimeType(ContentService.MimeType.JSON);
   }
-}" target="_blank" class="bg-white border border-amber-200 text-amber-600 px-3 py-1.5 rounded-xl text-[10px] font-bold hover:bg-amber-50 transition">Buka API Di Tab Baru ↗</a>
-            <button onclick="loadData()" class="bg-amber-600 text-white px-3 py-1.5 rounded-xl text-[10px] font-bold hover:bg-amber-700 transition active:scale-95">Muat Semula API</button>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Ringkasan Visual -->
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
-      <div class="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-        <div class="flex justify-between items-center mb-6">
-          <h3 class="font-black text-slate-400 uppercase text-[10px] tracking-widest">Taburan Gred Keseluruhan</h3>
-          <div class="flex gap-2">
-            <span class="w-3 h-3 rounded-full bg-green-500"></span>
-            <span class="w-3 h-3 rounded-full bg-blue-500"></span>
-            <span class="w-3 h-3 rounded-full bg-amber-500"></span>
-          </div>
-        </div>
-        <div class="h-56">
-          <canvas id="gradeChart"></canvas>
-        </div>
-      </div>
-      <div class="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
-        <h3 class="font-black text-slate-400 uppercase text-[10px] tracking-widest mb-4">Purata Markah Kelas</h3>
-        <div id="avg-mark" class="text-7xl font-black text-blue-700 tracking-tighter">0.0</div>
-        <div class="mt-6 px-5 py-1.5 bg-slate-100 text-slate-500 rounded-full text-[10px] font-black uppercase tracking-widest">Wajaran 100%</div>
-      </div>
-    </div>
-
-    <!-- Senarai Data -->
-    <div class="bg-white rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
-      <div class="p-6 border-b border-slate-50 flex justify-between items-center bg-slate-50/50">
-        <h2 class="font-black text-slate-700 uppercase text-xs tracking-widest">Senarai Pemarkahan Pelajar</h2>
-        <div class="flex gap-2">
-           <div id="host-badge" class="bg-white px-3 py-1 rounded-lg text-[10px] font-bold border border-slate-200 text-slate-400 uppercase tracking-widest">Deployment</div>
-        </div>
-      </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse">
-          <thead>
-            <tr class="bg-white text-slate-400 text-[10px] uppercase tracking-widest border-b border-slate-100">
-              <th class="p-6 font-black">Maklumat Pelajar</th>
-              <th class="p-6 font-black">HP1 (30)</th>
-              <th class="p-6 font-black">HP5 (10)</th>
-              <th class="p-6 font-black">T2 (60)</th>
-              <th class="p-6 font-black">Jumlah</th>
-              <th class="p-6 font-black text-center">Gred</th>
-              <th class="p-6 font-black text-center">Aksi</th>
-            </tr>
-          </thead>
-          <tbody id="student-list" class="divide-y divide-slate-50">
-            <!-- Data akan dimuatkan melalui JavaScript -->
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </main>
-
-  <!-- Modal Edit -->
-  <div id="modal" class="hidden fixed inset-0 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 z-50">
-    <div class="bg-white rounded-[2.5rem] w-full max-w-md p-10 shadow-2xl transition-all scale-100">
-      <div class="flex justify-between items-start mb-8">
-        <div>
-          <h2 class="text-2xl font-black text-slate-800 leading-tight" id="modal-name">Nama Pelajar</h2>
-          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Kemaskini Markah MPU3221</p>
-        </div>
-        <button onclick="closeModal()" class="text-slate-300 hover:text-slate-500 p-2">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-        </button>
-      </div>
-      
-      <div class="grid grid-cols-2 gap-5 mb-10">
-        <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">HP1 (30)</label>
-          <input type="number" id="inp-hp1" max="30" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
-        </div>
-        <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">HP5 (10)</label>
-          <input type="number" id="inp-hp5" max="10" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
-        </div>
-        <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">T2-KUMP (30)</label>
-          <input type="number" id="inp-t2k" max="30" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
-        </div>
-        <div class="col-span-1">
-          <label class="block text-[10px] font-black text-slate-400 uppercase mb-2 tracking-widest">T2-INDT (30)</label>
-          <input type="number" id="inp-t2i" max="30" min="0" class="w-full p-4 bg-slate-50 border-0 rounded-2xl focus:ring-2 focus:ring-blue-600 font-black text-slate-700 transition">
-        </div>
-      </div>
-      
-      <button onclick="saveMarks()" class="w-full py-5 bg-blue-600 text-white font-black rounded-3xl shadow-xl shadow-blue-100 hover:bg-blue-700 active:scale-95 transition-all text-xs uppercase tracking-widest">
-        Simpan Rekod Pelajar
-      </button>
-    </div>
-  </div>
-
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzLVsO8AhTqAoAZcyAskNyVa2LsLB68Kt2NAN7G51Mz28_a-Y4hEw65MS3e8us9DrDMRA/exec";
-
-    let currentData = [];
-    let selectedIndex = null;
-    let myChart = null;
-
-    /**
-     * Memuatkan data secara selamat dengan timeout dan fallback
-     */
-    async function loadData() {
-      const loadingEl = document.getElementById('loading');
-      if (loadingEl) loadingEl.style.display = 'flex';
-      
-      try {
-        // Keutamaan: Google Script Run jika dijalankan dalam persekitaran GAS
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          updateStatus("Live: Google Script", "bg-green-500");
-          google.script.run
-            .withSuccessHandler(data => showData(data))
-            .withFailureHandler(err => handleError(err))
-            .getSheetData();
-          return;
-        }
-
-        // Percubaan ke-2: Fetch API Luaran
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 saat timeout
-
-        const response = await fetch(`${API_URL}?action=read`, {
-          method: 'GET',
-          redirect: 'follow',
-          signal: controller.signal
-        });
-        
-        clearTimeout(timeoutId);
-
-        if (!response.ok) throw new Error("Respons API gagal");
-        
-        const data = await response.json();
-        updateStatus("Live: API Luaran", "bg-green-500");
-        showData(data);
-
-      } catch (error) {
-        console.warn("Fetch Error atau Timeout:", error.message);
-        handleError(error);
-      }
-    }
-
-    /**
-     * Pengurusan ralat yang lebih stabil
-     */
-    function handleError(err) {
-      const statusText = document.getElementById('connection-status');
-      const statusDot = document.getElementById('status-dot');
-      const warningBox = document.getElementById('api-warning');
-      const badge = document.getElementById('host-badge');
-
-      if (statusText) statusText.innerText = "Status: Mod Simulasi (CORS)";
-      if (statusDot) statusDot.className = "w-2 h-2 rounded-full bg-amber-500";
-      if (warningBox) warningBox.classList.remove('hidden');
-      if (badge) {
-        badge.innerText = "Mod Simulasi";
-        badge.classList.replace('text-slate-400', 'text-amber-500');
-        badge.classList.add('border-amber-100');
-      }
-      
-      simulateData();
-    }
-
-    function updateStatus(text, colorClass) {
-      const statusText = document.getElementById('connection-status');
-      const statusDot = document.getElementById('status-dot');
-      if (statusText) statusText.innerText = `Status: ${text}`;
-      if (statusDot) statusDot.className = `w-2 h-2 rounded-full ${colorClass}`;
-    }
-
-    function simulateData() {
-      const mockData = {
-        rows: [
-          [1, "Muhammad Amin (Simulasi)", "000101-01-0001", "202401", "PBKK1", 28, 9, 37, 26, 26, 52, 89.0, "A"],
-          [2, "Siti Nurhaliza (Simulasi)", "000202-02-0002", "202402", "PIMK1", 21, 6, 27, 20, 20, 40, 67.0, "B"],
-          [3, "Ramasamy (Simulasi)", "000303-03-0003", "202403", "PKBK1", 24, 7, 31, 23, 23, 46, 77.0, "A-"],
-          [4, "Tan Ah Beng (Simulasi)", "000404-04-0004", "202404", "PSVK1", 15, 4, 19, 15, 15, 30, 49.0, "D"]
-        ]
-      };
-      showData(mockData);
-    }
-
-    function showData(data) {
-      if (!data || !data.rows) return;
-      
-      currentData = data.rows;
-      const list = document.getElementById('student-list');
-      if (!list) return;
-      
-      list.innerHTML = "";
-      
-      let totalSum = 0;
-      let gradeCounts = { 'A':0, 'B':0, 'C':0, 'D/F':0 };
-
-      currentData.forEach((row, index) => {
-        // Pemetaan: 5=HP1, 6=HP5, 8=T2K, 9=T2I, 11=Jumlah, 12=Gred
-        const hp1 = Number(row[5]) || 0;
-        const hp5 = Number(row[6]) || 0;
-        const t2k = Number(row[8]) || 0;
-        const t2i = Number(row[9]) || 0;
-        const total = Number(row[11]) || 0;
-        const gred = String(row[12] || '-').trim();
-
-        totalSum += total;
-        if(gred.startsWith('A')) gradeCounts['A']++;
-        else if(gred.startsWith('B')) gradeCounts['B']++;
-        else if(gred.startsWith('C')) gradeCounts['C']++;
-        else gradeCounts['D/F']++;
-
-        list.innerHTML += `
-          <tr class="hover:bg-slate-50 transition border-b border-slate-50 last:border-0">
-            <td class="p-6">
-              <div class="font-black text-slate-800 text-sm uppercase">${row[1]}</div>
-              <div class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">${row[3] || 'TIADA ID'} | ${row[4] || 'TIADA KELAS'}</div>
-            </td>
-            <td class="p-6 text-xs font-black text-slate-500">${hp1}</td>
-            <td class="p-6 text-xs font-black text-slate-500">${hp5}</td>
-            <td class="p-6 text-xs font-black text-slate-500">${(t2k + t2i)}</td>
-            <td class="p-6">
-              <span class="text-xl font-black text-blue-700 tracking-tighter">${total.toFixed(1)}</span>
-            </td>
-            <td class="p-6 text-center">
-              <span class="inline-block min-w-[3.5rem] px-4 py-2 rounded-2xl text-[10px] font-black border shadow-sm ${getGredStyle(gred)}">
-                ${gred}
-              </span>
-            </td>
-            <td class="p-6 text-center">
-              <button onclick="openModal(${index})" class="bg-slate-900 text-white px-5 py-2.5 rounded-2xl text-[9px] font-black uppercase tracking-widest hover:bg-blue-600 transition shadow-lg active:scale-95">Edit</button>
-            </td>
-          </tr>
-        `;
-      });
-
-      const countEl = document.getElementById('stat-count');
-      const avgEl = document.getElementById('avg-mark');
-      if (countEl) countEl.innerText = `${currentData.length} Pelajar Terdaftar`;
-      if (avgEl) avgEl.innerText = currentData.length > 0 ? (totalSum / currentData.length).toFixed(1) : "0.0";
-      
-      updateChart(gradeCounts);
-      
-      // Sembunyikan skrin pemuatan
-      setTimeout(() => { 
-        const loading = document.getElementById('loading');
-        if (loading) loading.style.display = 'none'; 
-      }, 500);
-    }
-
-    function openModal(index) {
-      selectedIndex = index;
-      const row = currentData[index];
-      const modalName = document.getElementById('modal-name');
-      const inp1 = document.getElementById('inp-hp1');
-      const inp5 = document.getElementById('inp-hp5');
-      const inpT2k = document.getElementById('inp-t2k');
-      const inpT2i = document.getElementById('inp-t2i');
-      const modal = document.getElementById('modal');
-
-      if (modalName) modalName.innerText = row[1];
-      if (inp1) inp1.value = row[5];
-      if (inp5) inp5.value = row[6];
-      if (inpT2k) inpT2k.value = row[8];
-      if (inpT2i) inpT2i.value = row[9];
-      if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeModal() { 
-      const modal = document.getElementById('modal');
-      if (modal) modal.classList.add('hidden'); 
-    }
-
-    async function saveMarks() {
-      const marks = {
-        hp1: document.getElementById('inp-hp1').value,
-        hp5: document.getElementById('inp-hp5').value,
-        t2kump: document.getElementById('inp-t2k').value,
-        t2indt: document.getElementById('inp-t2i').value
-      };
-      
-      const loading = document.getElementById('loading');
-      const loadingText = document.getElementById('loading-text');
-      if (loading) loading.style.display = 'flex';
-      if (loadingText) loadingText.innerText = "Menyimpan Rekod...";
-      
-      try {
-        if (typeof google !== 'undefined' && google.script && google.script.run) {
-          google.script.run.withSuccessHandler(() => { closeModal(); loadData(); }).updateStudentMark(selectedIndex + 1, marks);
-        } else {
-          // Simulasi di persekitaran bukan GAS
-          console.info("Mod Simulasi: Markah tidak disimpan secara kekal.");
-          setTimeout(() => { closeModal(); loadData(); }, 1500);
-        }
-      } catch (err) {
-        console.error("Save Error:", err);
-        closeModal();
-        loadData();
-      }
-    }
-
-    function getGredStyle(g) {
-      if(g.startsWith('A')) return 'bg-green-50 text-green-700 border-green-100';
-      if(g.startsWith('B')) return 'bg-blue-50 text-blue-700 border-blue-100';
-      if(g.startsWith('C')) return 'bg-amber-50 text-amber-700 border-amber-100';
-      return 'bg-rose-50 text-rose-700 border-rose-100';
-    }
-
-    function updateChart(counts) {
-      const canvas = document.getElementById('gradeChart');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      if (myChart) myChart.destroy();
-      myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['A (CEMERLANG)', 'B (KEPUJIAN)', 'C (LULUS)', 'D/F (GAGAL)'],
-          datasets: [{
-            data: [counts['A'], counts['B'], counts['C'], counts['D/F']],
-            backgroundColor: ['#22c55e', '#3b82f6', '#f59e0b', '#f43f5e'],
-            borderRadius: 12,
-            barThickness: 40
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          plugins: { legend: { display: false } },
-          scales: { 
-            y: { beginAtZero: true, grid: { display: false }, ticks: { stepSize: 1, color: '#94a3b8' } }, 
-            x: { grid: { display: false }, ticks: { color: '#94a3b8', font: { weight: 'bold', size: 9 } } } 
-          }
-        }
-      });
-    }
-
-    // Jalankan loadData sebaik sahaja DOM sedia
-    document.addEventListener('DOMContentLoaded', loadData);
-  </script>
-</body>
-</html>
+}
