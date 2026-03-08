@@ -4,23 +4,21 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPU3221 Analytics - Statistik Markah Terkawal</title>
+  <title>MPU3221 Analytics - Fixed Update Logic</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
   <style>
     body { font-family: 'Plus Jakarta Sans', sans-serif; background: #070b14; min-height: 100vh; color: white; }
     .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; }
-    .text-glow { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     .loading-overlay { background: #070b14; display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
-    input:invalid { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
   </style>
 </head>
 <body>
 
   <div id="loading" class="loading-overlay">
     <div class="w-12 h-12 border-4 border-t-blue-500 border-blue-500/10 rounded-full animate-spin mb-4"></div>
-    <div class="text-[10px] font-black tracking-[0.3em] text-blue-400 uppercase">Mengira Statistik...</div>
+    <div class="text-[10px] font-black tracking-widest text-blue-400 uppercase">Mengemaskini Sistem...</div>
   </div>
 
   <nav class="sticky top-0 z-40 px-8 py-5 bg-[#070b14]/80 backdrop-blur-xl border-b border-white/5">
@@ -43,42 +41,28 @@
         <div class="text-[9px] uppercase font-black opacity-40 mb-1">Min (Markah Purata)</div>
         <div id="stat-mean" class="text-3xl font-black text-blue-400">0.0</div>
       </div>
-      <div class="glass p-6 border-l-4 border-purple-500">
-        <div class="text-[9px] uppercase font-black opacity-40 mb-1">Mod (Markah Kerap)</div>
-        <div id="stat-mode" class="text-3xl font-black text-purple-400">0.0</div>
-      </div>
       <div class="glass p-6 border-l-4 border-green-500">
         <div class="text-[9px] uppercase font-black opacity-40 mb-1">Sisihan Piawai (SD)</div>
         <div id="stat-sd" class="text-3xl font-black text-green-400">0.0</div>
       </div>
-      <div class="glass p-6 border-l-4 border-white">
-        <div class="text-[9px] uppercase font-black opacity-40 mb-1">Jumlah Pelajar</div>
-        <div id="stat-count" class="text-3xl font-black text-white">0</div>
+      <div class="glass p-6 border-l-4 border-purple-500">
+        <div class="text-[9px] uppercase font-black opacity-40 mb-1">Bilangan Calon</div>
+        <div id="stat-count" class="text-3xl font-black text-purple-400">0</div>
       </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-      <div class="glass p-8">
-        <h3 class="text-[10px] font-black uppercase text-blue-400 mb-6 tracking-widest">Taburan Normal (Bell Curve)</h3>
-        <div class="h-64"><canvas id="bellCurveChart"></canvas></div>
-      </div>
-      <div class="glass p-8">
-        <h3 class="text-[10px] font-black uppercase text-blue-400 mb-6 tracking-widest">Statistik Gred</h3>
-        <div class="h-64"><canvas id="gradeChart"></canvas></div>
-      </div>
-    </div>
-
+    
     <div class="glass overflow-hidden">
       <div class="p-6 border-b border-white/5 bg-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
-        <h2 class="text-xs font-black uppercase tracking-widest">Pangkalan Data Calon</h2>
-        <input type="text" id="searchName" onkeyup="filterTable()" placeholder="Cari nama pelajar..." class="w-full md:w-64 bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-xs outline-none focus:border-blue-500 transition">
+        <h2 class="text-xs font-black uppercase tracking-widest">Senarai Markah Pelajar</h2>
+        <input type="text" id="searchName" onkeyup="filterTable()" placeholder="Cari nama..." class="bg-black/20 border border-white/10 rounded-xl px-4 py-2 text-xs outline-none focus:border-blue-500 transition">
       </div>
       <div class="overflow-x-auto">
         <table class="w-full text-left">
           <thead class="text-[10px] uppercase text-white/30 border-b border-white/5">
             <tr>
-              <th class="p-6">Nama Pelajar</th>
-              <th class="p-6 text-center">Markah Keseluruhan</th>
+              <th class="p-6">Calon</th>
+              <th class="p-6 text-center">Markah (100)</th>
               <th class="p-6 text-center">Gred</th>
               <th class="p-6 text-center">Aksi</th>
             </tr>
@@ -91,38 +75,23 @@
 
   <div id="modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
     <div class="glass w-full max-w-md p-10">
-      <h2 id="modal-name" class="text-xl font-black uppercase mb-2 leading-tight">Nama Pelajar</h2>
-      <p class="text-[10px] font-bold text-blue-400 uppercase mb-8 tracking-widest text-center">Kemas Kini Markah (Maks: 100.0)</p>
-      
-      <div class="grid grid-cols-2 gap-6 mb-8">
-        <div class="space-y-2">
-          <label class="text-[9px] font-black uppercase opacity-40 ml-1">HP1 (Maks: 30)</label>
-          <input type="number" id="inp-hp1" min="0" max="30" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
-        </div>
-        <div class="space-y-2">
-          <label class="text-[9px] font-black uppercase opacity-40 ml-1">HP5 (Maks: 10)</label>
-          <input type="number" id="inp-hp5" min="0" max="10" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
-        </div>
-        <div class="space-y-2">
-          <label class="text-[9px] font-black uppercase opacity-40 ml-1">T2-KUMP (Maks: 30)</label>
-          <input type="number" id="inp-t2k" min="0" max="30" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
-        </div>
-        <div class="space-y-2">
-          <label class="text-[9px] font-black uppercase opacity-40 ml-1">T2-INDT (Maks: 30)</label>
-          <input type="number" id="inp-t2i" min="0" max="30" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
-        </div>
+      <h2 id="modal-name" class="text-xl font-black uppercase mb-8">Edit Markah</h2>
+      <input type="hidden" id="modal-id"> <div class="grid grid-cols-2 gap-4 mb-8">
+        <input type="number" id="inp-hp1" max="30" placeholder="HP1 (30)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none">
+        <input type="number" id="inp-hp5" max="10" placeholder="HP5 (10)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none">
+        <input type="number" id="inp-t2k" max="30" placeholder="T2-K (30)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none">
+        <input type="number" id="inp-t2i" max="30" placeholder="T2-I (30)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none">
       </div>
-
       <div class="flex gap-4">
-        <button onclick="closeModal()" class="flex-1 py-4 font-bold opacity-50 uppercase text-xs tracking-widest">Batal</button>
-        <button onclick="saveMarks()" class="flex-[2] py-4 bg-blue-600 rounded-xl font-bold uppercase text-xs shadow-lg shadow-blue-500/30 tracking-widest">Simpan Data</button>
+        <button onclick="closeModal()" class="flex-1 py-3 font-bold opacity-50 uppercase text-xs">Batal</button>
+        <button onclick="saveMarks()" class="flex-[2] py-3 bg-blue-600 rounded-xl font-bold uppercase text-xs">Simpan</button>
       </div>
     </div>
   </div>
 
   <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbx6dRVWEHcv7N73dUv-w9KsmUofdvAWr5QvkABj_jL-MiMvi7lbX6-S9qvxhBsmhklC/exec";
-    let currentData = [], gradeChart = null, bellChart = null, selectedIndex = null;
+    let currentData = [];
 
     async function loadData() {
       document.getElementById('loading').style.display = 'flex';
@@ -131,9 +100,9 @@
         const response = await fetch(`${API_URL}?action=read&kelas=${kelas}`);
         const data = await response.json();
         currentData = data.rows;
-        calculateStats(currentData);
         renderTable(currentData);
         
+        // Populate filter kelas sekali sahaja
         if (document.getElementById('filterKelas').options.length <= 1) {
           const resClasses = await fetch(`${API_URL}?action=getClasses`);
           const classesData = await resClasses.json();
@@ -146,63 +115,71 @@
       document.getElementById('loading').style.display = 'none';
     }
 
-    function calculateStats(rows) {
-      if (!rows.length) return;
-      const allMarks = rows.map(r => Number(r[11]) || 0).sort((a,b) => a-b);
-      const mean = allMarks.reduce((a, b) => a + b, 0) / allMarks.length;
-      const variance = allMarks.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / allMarks.length;
-      const sd = Math.sqrt(variance);
-      
-      const freqMap = {};
-      allMarks.forEach(m => freqMap[m] = (freqMap[m] || 0) + 1);
-      let maxFreq = 0, mode = allMarks[0];
-      for (let m in freqMap) { if (freqMap[m] > maxFreq) { maxFreq = freqMap[m]; mode = m; } }
-
-      document.getElementById('stat-mean').innerText = mean.toFixed(1);
-      document.getElementById('stat-sd').innerText = sd.toFixed(2);
-      document.getElementById('stat-mode').innerText = Number(mode).toFixed(1);
-      document.getElementById('stat-count').innerText = rows.length;
-
-      drawBellCurve(mean, sd);
-    }
-
-    function drawBellCurve(mean, sd) {
-      const ctx = document.getElementById('bellCurveChart').getContext('2d');
-      if (bellChart) bellChart.destroy();
-      const points = [];
-      for (let x = 0; x <= 100; x += 1) {
-        const y = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
-        points.push({x, y});
-      }
-      bellChart = new Chart(ctx, {
-        type: 'scatter',
-        data: { datasets: [{ data: points, showLine: true, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, pointRadius: 0, borderWidth: 3, tension: 0.4 }] },
-        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100, ticks: { color: '#666' } }, y: { display: false } } }
-      });
-    }
-
     function renderTable(rows) {
       const list = document.getElementById('student-list');
       list.innerHTML = "";
-      let gCounts = { A:0, B:0, C:0, Lain:0 };
-      rows.forEach((row, idx) => {
+      
+      rows.forEach((row) => {
+        // row[0] adalah ID unik 'BIL' dari kolum A
         const total = Number(row[11]) || 0;
         const gred = String(row[12] || '-').trim();
-        if(gred.startsWith('A')) gCounts.A++; else if(gred.startsWith('B')) gCounts.B++; else if(gred.startsWith('C')) gCounts.C++; else gCounts.Lain++;
-        list.innerHTML += `<tr class="hover:bg-white/[0.02]">
-            <td class="p-6"><div class="text-sm font-bold uppercase">${row[1]}</div><div class="text-[9px] text-blue-400 font-bold opacity-50 uppercase">${row[4]}</div></td>
-            <td class="p-6 text-center font-black text-xl text-glow">${total.toFixed(1)}</td>
-            <td class="p-6 text-center"><span class="px-3 py-1 rounded-lg text-[10px] font-black border ${gred.startsWith('A') ? 'text-green-400 border-green-500/20' : 'text-blue-400 border-blue-500/20'}">${gred}</span></td>
-            <td class="p-6 text-center"><button onclick="openModal(${idx})" class="text-[9px] font-black uppercase text-white/40 hover:text-white">Edit</button></td>
-          </tr>`;
+
+        list.innerHTML += `
+          <tr class="hover:bg-white/[0.02]">
+            <td class="p-6">
+              <div class="text-sm font-bold uppercase">${row[1]}</div>
+              <div class="text-[9px] text-blue-400 font-bold uppercase opacity-50">${row[4]}</div>
+            </td>
+            <td class="p-6 text-center font-black text-xl">${total.toFixed(1)}</td>
+            <td class="p-6 text-center"><span class="px-3 py-1 rounded-lg text-[10px] font-black border border-white/10">${gred}</span></td>
+            <td class="p-6 text-center">
+              <button onclick='openModal(${JSON.stringify(row)})' class="text-[9px] font-black uppercase text-blue-400">Edit</button>
+            </td>
+          </tr>
+        `;
       });
-      updateGradeChart(gCounts);
+      calculateStats(rows);
     }
 
-    function updateGradeChart(data) {
-      const ctx = document.getElementById('gradeChart').getContext('2d');
-      if (gradeChart) gradeChart.destroy();
-      gradeChart = new Chart(ctx, { type: 'bar', data: { labels: ['A', 'B', 'C', 'Lain'], datasets: [{ data: [data.A, data.B, data.C, data.Lain], backgroundColor: ['#22c55e', '#3b82f6', '#eab308', '#ef4444'], borderRadius: 10 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
+    function openModal(rowData) {
+      document.getElementById('modal-id').value = rowData[0]; // Simpan BIL
+      document.getElementById('modal-name').innerText = rowData[1];
+      document.getElementById('inp-hp1').value = rowData[5];
+      document.getElementById('inp-hp5').value = rowData[6];
+      document.getElementById('inp-t2k').value = rowData[8];
+      document.getElementById('inp-t2i').value = rowData[9];
+      document.getElementById('modal').classList.remove('hidden');
+    }
+
+    async function saveMarks() {
+      const id = document.getElementById('modal-id').value;
+      const m1 = parseFloat(document.getElementById('inp-hp1').value) || 0;
+      const m2 = parseFloat(document.getElementById('inp-hp5').value) || 0;
+      const m3 = parseFloat(document.getElementById('inp-t2k').value) || 0;
+      const m4 = parseFloat(document.getElementById('inp-t2i').value) || 0;
+
+      if (m1 > 30 || m2 > 10 || m3 > 30 || m4 > 30) {
+        alert("Markah melebihi had maksimum!"); return;
+      }
+
+      document.getElementById('loading').style.display = 'flex';
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'update', id: id, marks: { hp1: m1, hp5: m2, t2kump: m3, t2indt: m4 } })
+        });
+        closeModal(); loadData();
+      } catch (e) { alert("Ralat simpan data!"); document.getElementById('loading').style.display = 'none'; }
+    }
+
+    function calculateStats(rows) {
+      if (!rows.length) return;
+      const marks = rows.map(r => Number(r[11]) || 0);
+      const mean = marks.reduce((a, b) => a + b, 0) / marks.length;
+      const sd = Math.sqrt(marks.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / marks.length);
+      document.getElementById('stat-mean').innerText = mean.toFixed(1);
+      document.getElementById('stat-sd').innerText = sd.toFixed(2);
+      document.getElementById('stat-count').innerText = rows.length;
     }
 
     function filterTable() {
@@ -211,43 +188,7 @@
       renderTable(filtered);
     }
 
-    function openModal(idx) {
-      selectedIndex = idx; const r = currentData[idx];
-      document.getElementById('modal-name').innerText = r[1];
-      document.getElementById('inp-hp1').value = r[5]; document.getElementById('inp-hp5').value = r[6];
-      document.getElementById('inp-t2k').value = r[8]; document.getElementById('inp-t2i').value = r[9];
-      document.getElementById('modal').classList.remove('hidden');
-    }
-
     function closeModal() { document.getElementById('modal').classList.add('hidden'); }
-
-    async function saveMarks() {
-      // 1. Ambil nilai
-      const m1 = parseFloat(document.getElementById('inp-hp1').value) || 0;
-      const m2 = parseFloat(document.getElementById('inp-hp5').value) || 0;
-      const m3 = parseFloat(document.getElementById('inp-t2k').value) || 0;
-      const m4 = parseFloat(document.getElementById('inp-t2i').value) || 0;
-
-      // 2. Logik Pengesahan (Validation)
-      if (m1 > 30 || m2 > 10 || m3 > 30 || m4 > 30) {
-        alert("🚨 Ralat! Markah melebihi had maksimum.\n\nHP1: Maks 30\nHP5: Maks 10\nT2-KUMP: Maks 30\nT2-INDT: Maks 30");
-        return; // Henti fungsi jika gagal semakan
-      }
-      
-      if (m1 < 0 || m2 < 0 || m3 < 0 || m4 < 0) {
-        alert("Markah tidak boleh negatif.");
-        return;
-      }
-
-      const marks = { hp1: m1, hp5: m2, t2kump: m3, t2indt: m4 };
-      const realIndex = currentData[selectedIndex][0];
-      
-      document.getElementById('loading').style.display = 'flex';
-      try {
-        await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'update', index: realIndex, marks }) });
-        setTimeout(() => { closeModal(); loadData(); }, 1500);
-      } catch (e) { alert("Ralat!"); document.getElementById('loading').style.display = 'none'; }
-    }
 
     document.addEventListener('DOMContentLoaded', loadData);
   </script>
