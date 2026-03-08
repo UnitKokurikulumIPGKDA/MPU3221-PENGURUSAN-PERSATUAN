@@ -4,7 +4,7 @@
   <base target="_top">
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MPU3221 Analytics - Statistik Markah Keseluruhan</title>
+  <title>MPU3221 Analytics - Statistik Markah Terkawal</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap" rel="stylesheet">
@@ -13,13 +13,14 @@
     .glass { background: rgba(255, 255, 255, 0.02); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 24px; }
     .text-glow { text-shadow: 0 0 20px rgba(59, 130, 246, 0.5); }
     .loading-overlay { background: #070b14; display: flex; flex-direction: column; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999; }
+    input:invalid { border-color: #ef4444; background: rgba(239, 68, 68, 0.05); }
   </style>
 </head>
 <body>
 
   <div id="loading" class="loading-overlay">
     <div class="w-12 h-12 border-4 border-t-blue-500 border-blue-500/10 rounded-full animate-spin mb-4"></div>
-    <div class="text-[10px] font-black tracking-[0.3em] text-blue-400 uppercase">Mengira Statistik Markah...</div>
+    <div class="text-[10px] font-black tracking-[0.3em] text-blue-400 uppercase">Mengira Statistik...</div>
   </div>
 
   <nav class="sticky top-0 z-40 px-8 py-5 bg-[#070b14]/80 backdrop-blur-xl border-b border-white/5">
@@ -37,7 +38,6 @@
   </nav>
 
   <main class="container mx-auto px-6 py-8">
-    
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
       <div class="glass p-6 border-l-4 border-blue-500">
         <div class="text-[9px] uppercase font-black opacity-40 mb-1">Min (Markah Purata)</div>
@@ -63,12 +63,10 @@
         <div class="h-64"><canvas id="bellCurveChart"></canvas></div>
       </div>
       <div class="glass p-8">
-        <h3 class="text-[10px] font-black uppercase text-blue-400 mb-6 tracking-widest">Statistik Gred (Bilangan)</h3>
+        <h3 class="text-[10px] font-black uppercase text-blue-400 mb-6 tracking-widest">Statistik Gred</h3>
         <div class="h-64"><canvas id="gradeChart"></canvas></div>
       </div>
     </div>
-
-    
 
     <div class="glass overflow-hidden">
       <div class="p-6 border-b border-white/5 bg-white/5 flex flex-col md:flex-row justify-between items-center gap-4">
@@ -93,16 +91,31 @@
 
   <div id="modal" class="hidden fixed inset-0 bg-black/95 backdrop-blur-md flex items-center justify-center z-50 p-4">
     <div class="glass w-full max-w-md p-10">
-      <h2 id="modal-name" class="text-xl font-black uppercase mb-8">Kemas Kini Markah</h2>
-      <div class="grid grid-cols-2 gap-4 mb-8">
-        <input type="number" id="inp-hp1" placeholder="HP1 (30)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500">
-        <input type="number" id="inp-hp5" placeholder="HP5 (10)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500">
-        <input type="number" id="inp-t2k" placeholder="T2-KUMP (30)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500">
-        <input type="number" id="inp-t2i" placeholder="T2-INDT (30)" class="bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500">
+      <h2 id="modal-name" class="text-xl font-black uppercase mb-2 leading-tight">Nama Pelajar</h2>
+      <p class="text-[10px] font-bold text-blue-400 uppercase mb-8 tracking-widest text-center">Kemas Kini Markah (Maks: 100.0)</p>
+      
+      <div class="grid grid-cols-2 gap-6 mb-8">
+        <div class="space-y-2">
+          <label class="text-[9px] font-black uppercase opacity-40 ml-1">HP1 (Maks: 30)</label>
+          <input type="number" id="inp-hp1" min="0" max="30" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
+        </div>
+        <div class="space-y-2">
+          <label class="text-[9px] font-black uppercase opacity-40 ml-1">HP5 (Maks: 10)</label>
+          <input type="number" id="inp-hp5" min="0" max="10" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
+        </div>
+        <div class="space-y-2">
+          <label class="text-[9px] font-black uppercase opacity-40 ml-1">T2-KUMP (Maks: 30)</label>
+          <input type="number" id="inp-t2k" min="0" max="30" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
+        </div>
+        <div class="space-y-2">
+          <label class="text-[9px] font-black uppercase opacity-40 ml-1">T2-INDT (Maks: 30)</label>
+          <input type="number" id="inp-t2i" min="0" max="30" step="0.1" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 outline-none focus:border-blue-500 transition">
+        </div>
       </div>
+
       <div class="flex gap-4">
-        <button onclick="closeModal()" class="flex-1 py-3 font-bold opacity-50 uppercase text-xs">Batal</button>
-        <button onclick="saveMarks()" class="flex-[2] py-3 bg-blue-600 rounded-xl font-bold uppercase text-xs shadow-lg shadow-blue-500/30">Sahkan</button>
+        <button onclick="closeModal()" class="flex-1 py-4 font-bold opacity-50 uppercase text-xs tracking-widest">Batal</button>
+        <button onclick="saveMarks()" class="flex-[2] py-4 bg-blue-600 rounded-xl font-bold uppercase text-xs shadow-lg shadow-blue-500/30 tracking-widest">Simpan Data</button>
       </div>
     </div>
   </div>
@@ -118,8 +131,7 @@
         const response = await fetch(`${API_URL}?action=read&kelas=${kelas}`);
         const data = await response.json();
         currentData = data.rows;
-        
-        calculateDetailedStats(currentData);
+        calculateStats(currentData);
         renderTable(currentData);
         
         if (document.getElementById('filterKelas').options.length <= 1) {
@@ -130,24 +142,17 @@
             document.getElementById('filterKelas').appendChild(opt);
           });
         }
-      } catch (e) { console.error("Error loading data:", e); }
+      } catch (e) { console.error(e); }
       document.getElementById('loading').style.display = 'none';
     }
 
-    function calculateDetailedStats(rows) {
+    function calculateStats(rows) {
       if (!rows.length) return;
-      
-      // Ambil markah keseluruhan (Kolum L / Index 11)
       const allMarks = rows.map(r => Number(r[11]) || 0).sort((a,b) => a-b);
-      
-      // 1. Kira Min (Mean)
       const mean = allMarks.reduce((a, b) => a + b, 0) / allMarks.length;
-      
-      // 2. Kira Sisihan Piawai (Standard Deviation) - Berdasarkan Markah
       const variance = allMarks.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / allMarks.length;
       const sd = Math.sqrt(variance);
       
-      // 3. Kira Mod (Mode) - Markah paling kerap muncul
       const freqMap = {};
       allMarks.forEach(m => freqMap[m] = (freqMap[m] || 0) + 1);
       let maxFreq = 0, mode = allMarks[0];
@@ -158,52 +163,21 @@
       document.getElementById('stat-mode').innerText = Number(mode).toFixed(1);
       document.getElementById('stat-count').innerText = rows.length;
 
-      drawBellCurve(mean, sd, allMarks);
+      drawBellCurve(mean, sd);
     }
 
-    function drawBellCurve(mean, sd, marks) {
+    function drawBellCurve(mean, sd) {
       const ctx = document.getElementById('bellCurveChart').getContext('2d');
       if (bellChart) bellChart.destroy();
-
       const points = [];
-      // Jana lengkungan dari 0 ke 100 markah
       for (let x = 0; x <= 100; x += 1) {
-        const exponent = -0.5 * Math.pow((x - mean) / sd, 2);
-        const y = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(exponent);
+        const y = (1 / (sd * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow((x - mean) / sd, 2));
         points.push({x, y});
       }
-
       bellChart = new Chart(ctx, {
         type: 'scatter',
-        data: {
-          datasets: [{
-            label: 'Taburan Markah',
-            data: points,
-            showLine: true,
-            borderColor: '#3b82f6',
-            backgroundColor: 'rgba(59, 130, 246, 0.1)',
-            fill: true,
-            pointRadius: 0,
-            borderWidth: 3,
-            tension: 0.4
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: { 
-            legend: { display: false },
-            tooltip: { enabled: false }
-          },
-          scales: {
-            x: { 
-              min: 0, max: 100,
-              grid: { color: 'rgba(255,255,255,0.05)' },
-              ticks: { color: '#666', font: { size: 10 } },
-              title: { display: true, text: 'Markah Keseluruhan', color: '#444', font: { size: 10 } }
-            },
-            y: { display: false }
-          }
-        }
+        data: { datasets: [{ data: points, showLine: true, borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, pointRadius: 0, borderWidth: 3, tension: 0.4 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { min: 0, max: 100, ticks: { color: '#666' } }, y: { display: false } } }
       });
     }
 
@@ -211,27 +185,16 @@
       const list = document.getElementById('student-list');
       list.innerHTML = "";
       let gCounts = { A:0, B:0, C:0, Lain:0 };
-
       rows.forEach((row, idx) => {
         const total = Number(row[11]) || 0;
         const gred = String(row[12] || '-').trim();
         if(gred.startsWith('A')) gCounts.A++; else if(gred.startsWith('B')) gCounts.B++; else if(gred.startsWith('C')) gCounts.C++; else gCounts.Lain++;
-
-        list.innerHTML += `
-          <tr class="hover:bg-white/[0.02] transition-all">
-            <td class="p-6">
-              <div class="text-sm font-bold uppercase tracking-tight">${row[1]}</div>
-              <div class="text-[9px] text-blue-400 font-bold uppercase opacity-50">${row[3]} | ${row[4]}</div>
-            </td>
+        list.innerHTML += `<tr class="hover:bg-white/[0.02]">
+            <td class="p-6"><div class="text-sm font-bold uppercase">${row[1]}</div><div class="text-[9px] text-blue-400 font-bold opacity-50 uppercase">${row[4]}</div></td>
             <td class="p-6 text-center font-black text-xl text-glow">${total.toFixed(1)}</td>
-            <td class="p-6 text-center">
-              <span class="px-3 py-1 rounded-lg text-[9px] font-black border ${gred.startsWith('A') ? 'text-green-400 border-green-500/20 bg-green-500/5' : 'text-blue-400 border-blue-500/20 bg-blue-500/5'}">${gred}</span>
-            </td>
-            <td class="p-6 text-center">
-              <button onclick="openModal(${idx})" class="px-4 py-2 glass rounded-xl text-[9px] font-black uppercase hover:bg-white/10 transition">Edit</button>
-            </td>
-          </tr>
-        `;
+            <td class="p-6 text-center"><span class="px-3 py-1 rounded-lg text-[10px] font-black border ${gred.startsWith('A') ? 'text-green-400 border-green-500/20' : 'text-blue-400 border-blue-500/20'}">${gred}</span></td>
+            <td class="p-6 text-center"><button onclick="openModal(${idx})" class="text-[9px] font-black uppercase text-white/40 hover:text-white">Edit</button></td>
+          </tr>`;
       });
       updateGradeChart(gCounts);
     }
@@ -239,21 +202,7 @@
     function updateGradeChart(data) {
       const ctx = document.getElementById('gradeChart').getContext('2d');
       if (gradeChart) gradeChart.destroy();
-      gradeChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: ['A', 'B', 'C', 'Lain'],
-          datasets: [{ data: [data.A, data.B, data.C, data.Lain], backgroundColor: ['#22c55e', '#3b82f6', '#eab308', '#ef4444'], borderRadius: 12 }]
-        },
-        options: { 
-          responsive: true, maintainAspectRatio: false, 
-          plugins: { legend: { display: false } },
-          scales: { 
-            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 1, color: '#444' } },
-            x: { grid: { display: false }, ticks: { color: '#666' } }
-          }
-        }
-      });
+      gradeChart = new Chart(ctx, { type: 'bar', data: { labels: ['A', 'B', 'C', 'Lain'], datasets: [{ data: [data.A, data.B, data.C, data.Lain], backgroundColor: ['#22c55e', '#3b82f6', '#eab308', '#ef4444'], borderRadius: 10 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } } });
     }
 
     function filterTable() {
@@ -273,8 +222,26 @@
     function closeModal() { document.getElementById('modal').classList.add('hidden'); }
 
     async function saveMarks() {
-      const marks = { hp1: document.getElementById('inp-hp1').value, hp5: document.getElementById('inp-hp5').value, t2kump: document.getElementById('inp-t2k').value, t2indt: document.getElementById('inp-t2i').value };
+      // 1. Ambil nilai
+      const m1 = parseFloat(document.getElementById('inp-hp1').value) || 0;
+      const m2 = parseFloat(document.getElementById('inp-hp5').value) || 0;
+      const m3 = parseFloat(document.getElementById('inp-t2k').value) || 0;
+      const m4 = parseFloat(document.getElementById('inp-t2i').value) || 0;
+
+      // 2. Logik Pengesahan (Validation)
+      if (m1 > 30 || m2 > 10 || m3 > 30 || m4 > 30) {
+        alert("🚨 Ralat! Markah melebihi had maksimum.\n\nHP1: Maks 30\nHP5: Maks 10\nT2-KUMP: Maks 30\nT2-INDT: Maks 30");
+        return; // Henti fungsi jika gagal semakan
+      }
+      
+      if (m1 < 0 || m2 < 0 || m3 < 0 || m4 < 0) {
+        alert("Markah tidak boleh negatif.");
+        return;
+      }
+
+      const marks = { hp1: m1, hp5: m2, t2kump: m3, t2indt: m4 };
       const realIndex = currentData[selectedIndex][0];
+      
       document.getElementById('loading').style.display = 'flex';
       try {
         await fetch(API_URL, { method: 'POST', body: JSON.stringify({ action: 'update', index: realIndex, marks }) });
